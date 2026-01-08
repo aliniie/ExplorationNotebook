@@ -1,0 +1,226 @@
+import React, { useState, useRef } from 'react';
+import { Camera, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+
+const locations = [
+  '용호동 별빛공원',
+  '등산로 산책길',
+  '이기대 보행약자 배려길',
+  '이기대 해안길',
+  '들개구멍, 해녀막사',
+  '구름다리',
+  '동생말 전망대',
+  '이기대 동생말'
+];
+
+export default function ExplorationNotebook() {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [photos, setPhotos] = useState(Array(8).fill(null));
+  const fileInputRefs = useRef([]);
+
+  const handlePhotoCapture = (index, event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const newPhotos = [...photos];
+        newPhotos[index] = e.target.result;
+        setPhotos(newPhotos);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSavePhoto = (index) => {
+    if (photos[index]) {
+      const link = document.createElement('a');
+      link.href = photos[index];
+      link.download = `${locations[index]}.jpg`;
+      link.click();
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPage < 9) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleSaveNotebook = () => {
+    window.print();
+  };
+
+  // Cover page
+  if (currentPage === 0) {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-200 p-4"
+        onClick={handleNext}
+      >
+        <div className="w-full max-w-md aspect-[3/4] bg-gradient-to-br from-amber-800 to-amber-900 rounded-lg shadow-2xl flex items-center justify-center cursor-pointer relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDIwIDAgTCAwIDAgMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
+          <div className="text-center z-10">
+            <h1 className="text-5xl font-bold text-amber-50 mb-4" style={{ fontFamily: 'serif' }}>
+              탐험수첩
+            </h1>
+            <p className="text-amber-200 text-sm">터치하여 열기</p>
+          </div>
+          <div className="absolute bottom-4 right-4 text-amber-300 text-xs">
+            <ChevronRight size={24} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Photo pages (1-8)
+  if (currentPage >= 1 && currentPage <= 8) {
+    const photoIndex = currentPage - 1;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-200 p-4">
+        <div className="w-full max-w-md aspect-[3/4] bg-amber-50 rounded-lg shadow-2xl p-6 relative" style={{
+          backgroundImage: `repeating-linear-gradient(transparent, transparent 24px, #e0d5c7 24px, #e0d5c7 25px)`
+        }}>
+          {/* Page number */}
+          <div className="absolute top-4 right-4 text-amber-800 text-sm font-semibold">
+            {currentPage}/10
+          </div>
+
+          {/* Photo area */}
+          <div className="mt-12 mb-6">
+            {photos[photoIndex] ? (
+              <div className="relative">
+                <img 
+                  src={photos[photoIndex]} 
+                  alt={locations[photoIndex]}
+                  className="w-full h-64 object-cover rounded shadow-lg"
+                />
+                {/* Masking tape */}
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-200 bg-opacity-70 px-8 py-1 rotate-1 shadow-md">
+                  <p className="text-sm text-gray-700" style={{ fontFamily: 'cursive' }}>
+                    {photoIndex + 1}. {locations[photoIndex]}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div 
+                onClick={() => fileInputRefs.current[photoIndex]?.click()}
+                className="w-full h-64 border-4 border-dashed border-amber-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-amber-100 transition-colors"
+              >
+                <Camera size={48} className="text-amber-400 mb-2" />
+                <p className="text-amber-600 text-sm">사진 촬영하기</p>
+                <p className="text-amber-500 text-xs mt-1">{photoIndex + 1}. {locations[photoIndex]}</p>
+              </div>
+            )}
+            <input
+              ref={(el) => (fileInputRefs.current[photoIndex] = el)}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => handlePhotoCapture(photoIndex, e)}
+              className="hidden"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="absolute bottom-6 left-6 right-6 flex gap-3">
+            <button
+              onClick={() => handleSavePhoto(photoIndex)}
+              disabled={!photos[photoIndex]}
+              className="flex-1 bg-amber-600 text-white py-3 rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-amber-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Download size={18} />
+              사진저장하기
+            </button>
+            <button
+              onClick={handleNext}
+              className="flex-1 bg-amber-800 text-white py-3 rounded-lg font-semibold hover:bg-amber-900 transition-colors flex items-center justify-center gap-2"
+            >
+              다음
+              <ChevronRight size={18} />
+            </button>
+          </div>
+
+          {/* Back button */}
+          {currentPage > 1 && (
+            <button
+              onClick={handlePrev}
+              className="absolute top-4 left-4 text-amber-600 hover:text-amber-800"
+            >
+              <ChevronLeft size={24} />
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Summary page (9)
+  if (currentPage === 9) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-200 p-4">
+        <div className="w-full max-w-md aspect-[3/4] bg-amber-50 rounded-lg shadow-2xl p-6 relative overflow-y-auto" style={{
+          backgroundImage: `repeating-linear-gradient(transparent, transparent 24px, #e0d5c7 24px, #e0d5c7 25px)`
+        }}>
+          {/* Page number */}
+          <div className="absolute top-4 right-4 text-amber-800 text-sm font-semibold">
+            10/10
+          </div>
+
+          <h2 className="text-2xl font-bold text-amber-900 mb-4 text-center" style={{ fontFamily: 'cursive' }}>
+            나의 탐험 기록
+          </h2>
+
+          {/* Photo grid */}
+          <div className="grid grid-cols-2 gap-3 mb-20">
+            {photos.map((photo, index) => (
+              <div key={index} className="relative">
+                {photo ? (
+                  <>
+                    <img 
+                      src={photo} 
+                      alt={locations[index]}
+                      className="w-full h-32 object-cover rounded shadow"
+                    />
+                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-yellow-200 bg-opacity-70 px-2 py-0.5 text-xs rotate-1">
+                      {index + 1}
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-32 bg-gray-200 rounded flex items-center justify-center">
+                    <p className="text-gray-400 text-xs">사진 없음</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Buttons */}
+          <div className="absolute bottom-6 left-6 right-6 flex gap-3">
+            <button
+              onClick={handlePrev}
+              className="flex-1 bg-amber-600 text-white py-3 rounded-lg font-semibold hover:bg-amber-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <ChevronLeft size={18} />
+              이전
+            </button>
+            <button
+              onClick={handleSaveNotebook}
+              className="flex-1 bg-amber-800 text-white py-3 rounded-lg font-semibold hover:bg-amber-900 transition-colors flex items-center justify-center gap-2"
+            >
+              <Download size={18} />
+              수첩 저장하기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
