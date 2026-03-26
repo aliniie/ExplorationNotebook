@@ -1,575 +1,259 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>탐험수첩</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .notebook {
-            width: 100%;
-            max-width: 400px;
-            aspect-ratio: 3/4;
-            background: #fefce8;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .page {
-            display: none;
-            width: 100%;
-            height: 100%;
-            padding: 30px;
-            position: relative;
-        }
-
-        .page.active {
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Cover page */
-        .cover {
-            background: linear-gradient(135deg, #92400e 0%, #78350f 100%);
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .cover::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.03) 20px, rgba(255,255,255,0.03) 40px);
-        }
-
-        .cover-title {
-            font-size: 48px;
-            color: #fef3c7;
-            font-family: serif;
-            font-weight: bold;
-            text-align: center;
-            z-index: 1;
-        }
-
-        .cover-subtitle {
-            color: #fcd34d;
-            font-size: 14px;
-            margin-top: 20px;
-            z-index: 1;
-        }
-
-        /* Photo pages */
-        .photo-page {
-            background-image: repeating-linear-gradient(transparent, transparent 24px, #e0d5c7 24px, #e0d5c7 25px);
-        }
-
-        .page-number {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: #92400e;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        .photo-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            margin-bottom: 80px;
-        }
-
-        .photo-area {
-            width: 100%;
-            height: 280px;
-            position: relative;
-            margin-top: 40px;
-        }
-
-        .photo-placeholder {
-            width: 100%;
-            height: 100%;
-            border: 4px dashed #fbbf24;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .photo-placeholder:hover {
-            background: #fef3c7;
-        }
-
-        .photo-placeholder svg {
-            width: 48px;
-            height: 48px;
-            color: #fbbf24;
-            margin-bottom: 10px;
-        }
-
-        .photo-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .masking-tape {
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%) rotate(1deg);
-            background: rgba(254, 240, 138, 0.8);
-            padding: 4px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            font-family: cursive;
-            font-size: 14px;
-            color: #374151;
-        }
-
-        .button-container {
-            position: absolute;
-            bottom: 30px;
-            left: 30px;
-            right: 30px;
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.3s;
-        }
-
-        .btn-save {
-            background: #d97706;
-            color: white;
-        }
-
-        .btn-save:hover {
-            background: #b45309;
-        }
-
-        .btn-save:disabled {
-            background: #d1d5db;
-            cursor: not-allowed;
-        }
-
-        .btn-next {
-            background: #92400e;
-            color: white;
-        }
-
-        .btn-next:hover {
-            background: #78350f;
-        }
-
-        .btn-back {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: transparent;
-            border: none;
-            color: #d97706;
-            cursor: pointer;
-            padding: 8px;
-        }
-
-        /* Summary page */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 100px;
-            margin-top: 60px;
-        }
-
-        .summary-title {
-            text-align: center;
-            font-size: 24px;
-            color: #78350f;
-            font-family: cursive;
-            margin-bottom: 20px;
-        }
-
-        .summary-item {
-            position: relative;
-            aspect-ratio: 1;
-        }
-
-        .summary-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        .summary-item .mini-tape {
-            position: absolute;
-            top: -8px;
-            left: 50%;
-            transform: translateX(-50%) rotate(1deg);
-            background: rgba(254, 240, 138, 0.8);
-            padding: 2px 8px;
-            font-size: 10px;
-        }
-
-        .summary-empty {
-            width: 100%;
-            height: 100%;
-            background: #e5e7eb;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            color: #9ca3af;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        @media print {
-            body {
-                background: white;
-            }
-            .button-container {
-                display: none;
-            }
-            .btn-back {
-                display: none;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>탐험수첩</title>
+  
+  <!-- Tailwind CSS 불러오기 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM 불러오기 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel 불러오기 (JSX 변환기) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
-    <div class="notebook" id="notebook">
-        <!-- Cover Page -->
-        <div class="page cover active" onclick="nextPage()">
-            <h1 class="cover-title">탐험수첩</h1>
-            <p class="cover-subtitle">터치하여 열기</p>
-        </div>
+  <div id="root"></div>
 
-        <!-- Photo Pages 1-8 -->
-        <div class="page photo-page" id="page1">
-            <button class="btn-back" onclick="prevPage()">←</button>
-            <div class="page-number">1/10</div>
-            <div class="photo-container">
-                <div class="photo-area" id="photoArea0">
-                    <div class="photo-placeholder" onclick="document.getElementById('fileInput0').click()">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <p style="color: #d97706; font-size: 14px;">사진 촬영하기</p>
-                        <p style="color: #f59e0b; font-size: 12px; margin-top: 5px;">1. 용호동 별빛공원</p>
-                    </div>
-                </div>
-            </div>
-            <input type="file" id="fileInput0" accept="image/*" capture="environment" onchange="handlePhoto(0)">
-            <div class="button-container">
-                <button class="btn-save" id="saveBtn0" onclick="savePhoto(0)" disabled>💾 사진저장하기</button>
-                <button class="btn-next" onclick="nextPage()">다음 →</button>
-            </div>
-        </div>
+  <script type="text/babel">
+    const { useState, useRef } = React;
 
-        <div class="page photo-page" id="page2">
-            <button class="btn-back" onclick="prevPage()">←</button>
-            <div class="page-number">2/10</div>
-            <div class="photo-container">
-                <div class="photo-area" id="photoArea1">
-                    <div class="photo-placeholder" onclick="document.getElementById('fileInput1').click()">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <p style="color: #d97706; font-size: 14px;">사진 촬영하기</p>
-                        <p style="color: #f59e0b; font-size: 12px; margin-top: 5px;">2. 등산로 산책길</p>
-                    </div>
-                </div>
-            </div>
-            <input type="file" id="fileInput1" accept="image/*" capture="environment" onchange="handlePhoto(1)">
-            <div class="button-container">
-                <button class="btn-save" id="saveBtn1" onclick="savePhoto(1)" disabled>💾 사진저장하기</button>
-                <button class="btn-next" onclick="nextPage()">다음 →</button>
-            </div>
-        </div>
+    // 아이콘 SVG 컴포넌트 (lucide-react 대체)
+    const Camera = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+    );
+    const ChevronLeft = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 18 9 12 15 6"/></svg>
+    );
+    const ChevronRight = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6"/></svg>
+    );
+    const Download = ({ size = 24, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    );
 
-        <div class="page photo-page" id="page3">
-            <button class="btn-back" onclick="prevPage()">←</button>
-            <div class="page-number">3/10</div>
-            <div class="photo-container">
-                <div class="photo-area" id="photoArea2">
-                    <div class="photo-placeholder" onclick="document.getElementById('fileInput2').click()">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <p style="color: #d97706; font-size: 14px;">사진 촬영하기</p>
-                        <p style="color: #f59e0b; font-size: 12px; margin-top: 5px;">3. 이기대 보행약자 배려길</p>
-                    </div>
-                </div>
-            </div>
-            <input type="file" id="fileInput2" accept="image/*" capture="environment" onchange="handlePhoto(2)">
-            <div class="button-container">
-                <button class="btn-save" id="saveBtn2" onclick="savePhoto(2)" disabled>💾 사진저장하기</button>
-                <button class="btn-next" onclick="nextPage()">다음 →</button>
-            </div>
-        </div>
+    const locations = [
+      '용호동 별빛공원',
+      '등산로 산책길',
+      '이기대 보행약자 배려길',
+      '이기대 해안길',
+      '들개구멍, 해녀막사',
+      '구름다리',
+      '동생말 전망대',
+      '이기대 동생말'
+    ];
 
-        <div class="page photo-page" id="page4">
-            <button class="btn-back" onclick="prevPage()">←</button>
-            <div class="page-number">4/10</div>
-            <div class="photo-container">
-                <div class="photo-area" id="photoArea3">
-                    <div class="photo-placeholder" onclick="document.getElementById('fileInput3').click()">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <p style="color: #d97706; font-size: 14px;">사진 촬영하기</p>
-                        <p style="color: #f59e0b; font-size: 12px; margin-top: 5px;">4. 이기대 해안길</p>
-                    </div>
-                </div>
-            </div>
-            <input type="file" id="fileInput3" accept="image/*" capture="environment" onchange="handlePhoto(3)">
-            <div class="button-container">
-                <button class="btn-save" id="saveBtn3" onclick="savePhoto(3)" disabled>💾 사진저장하기</button>
-                <button class="btn-next" onclick="nextPage()">다음 →</button>
-            </div>
-        </div>
+    function ExplorationNotebook() {
+      const [currentPage, setCurrentPage] = useState(0);
+      const [photos, setPhotos] = useState(Array(8).fill(null));
+      const fileInputRefs = useRef([]);
 
-        <div class="page photo-page" id="page5">
-            <button class="btn-back" onclick="prevPage()">←</button>
-            <div class="page-number">5/10</div>
-            <div class="photo-container">
-                <div class="photo-area" id="photoArea4">
-                    <div class="photo-placeholder" onclick="document.getElementById('fileInput4').click()">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <p style="color: #d97706; font-size: 14px;">사진 촬영하기</p>
-                        <p style="color: #f59e0b; font-size: 12px; margin-top: 5px;">5. 들개구멍, 해녀막사</p>
-                    </div>
-                </div>
-            </div>
-            <input type="file" id="fileInput4" accept="image/*" capture="environment" onchange="handlePhoto(4)">
-            <div class="button-container">
-                <button class="btn-save" id="saveBtn4" onclick="savePhoto(4)" disabled>💾 사진저장하기</button>
-                <button class="btn-next" onclick="nextPage()">다음 →</button>
-            </div>
-        </div>
-
-        <div class="page photo-page" id="page6">
-            <button class="btn-back" onclick="prevPage()">←</button>
-            <div class="page-number">6/10</div>
-            <div class="photo-container">
-                <div class="photo-area" id="photoArea5">
-                    <div class="photo-placeholder" onclick="document.getElementById('fileInput5').click()">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <p style="color: #d97706; font-size: 14px;">사진 촬영하기</p>
-                        <p style="color: #f59e0b; font-size: 12px; margin-top: 5px;">6. 구름다리</p>
-                    </div>
-                </div>
-            </div>
-            <input type="file" id="fileInput5" accept="image/*" capture="environment" onchange="handlePhoto(5)">
-            <div class="button-container">
-                <button class="btn-save" id="saveBtn5" onclick="savePhoto(5)" disabled>💾 사진저장하기</button>
-                <button class="btn-next" onclick="nextPage()">다음 →</button>
-            </div>
-        </div>
-
-        <div class="page photo-page" id="page7">
-            <button class="btn-back" onclick="prevPage()">←</button>
-            <div class="page-number">7/10</div>
-            <div class="photo-container">
-                <div class="photo-area" id="photoArea6">
-                    <div class="photo-placeholder" onclick="document.getElementById('fileInput6').click()">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <p style="color: #d97706; font-size: 14px;">사진 촬영하기</p>
-                        <p style="color: #f59e0b; font-size: 12px; margin-top: 5px;">7. 동생말 전망대</p>
-                    </div>
-                </div>
-            </div>
-            <input type="file" id="fileInput6" accept="image/*" capture="environment" onchange="handlePhoto(6)">
-            <div class="button-container">
-                <button class="btn-save" id="saveBtn6" onclick="savePhoto(6)" disabled>💾 사진저장하기</button>
-                <button class="btn-next" onclick="nextPage()">다음 →</button>
-            </div>
-        </div>
-
-        <div class="page photo-page" id="page8">
-            <button class="btn-back" onclick="prevPage()">←</button>
-            <div class="page-number">8/10</div>
-            <div class="photo-container">
-                <div class="photo-area" id="photoArea7">
-                    <div class="photo-placeholder" onclick="document.getElementById('fileInput7').click()">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <p style="color: #d97706; font-size: 14px;">사진 촬영하기</p>
-                        <p style="color: #f59e0b; font-size: 12px; margin-top: 5px;">8. 이기대 동생말</p>
-                    </div>
-                </div>
-            </div>
-            <input type="file" id="fileInput7" accept="image/*" capture="environment" onchange="handlePhoto(7)">
-            <div class="button-container">
-                <button class="btn-save" id="saveBtn7" onclick="savePhoto(7)" disabled>💾 사진저장하기</button>
-                <button class="btn-next" onclick="nextPage()">다음 →</button>
-            </div>
-        </div>
-
-        <!-- Summary Page -->
-        <div class="page photo-page" id="page9">
-            <button class="btn-back" onclick="prevPage()">←</button>
-            <div class="page-number">10/10</div>
-            <h2 class="summary-title">나의 탐험 기록</h2>
-            <div class="summary-grid" id="summaryGrid"></div>
-            <div class="button-container">
-                <button class="btn-save" onclick="prevPage()">← 이전</button>
-                <button class="btn-next" onclick="saveNotebook()">💾 수첩 저장하기</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const locations = [
-            '용호동 별빛공원',
-            '등산로 산책길',
-            '이기대 보행약자 배려길',
-            '이기대 해안길',
-            '들개구멍, 해녀막사',
-            '구름다리',
-            '동생말 전망대',
-            '이기대 동생말'
-        ];
-
-        let currentPage = 0;
-        const photos = new Array(8).fill(null);
-
-        function showPage(pageIndex) {
-            const pages = document.querySelectorAll('.page');
-            pages.forEach(page => page.classList.remove('active'));
-            pages[pageIndex].classList.add('active');
-            currentPage = pageIndex;
-
-            if (pageIndex === 9) {
-                updateSummaryGrid();
-            }
+      const handlePhotoCapture = (index, event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const newPhotos = [...photos];
+            newPhotos[index] = e.target.result;
+            setPhotos(newPhotos);
+          };
+          reader.readAsDataURL(file);
         }
+      };
 
-        function nextPage() {
-            if (currentPage < 9) {
-                showPage(currentPage + 1);
-            }
+      const handleSavePhoto = (index) => {
+        if (photos[index]) {
+          const link = document.createElement('a');
+          link.href = photos[index];
+          link.download = `${locations[index]}.jpg`;
+          link.click();
         }
+      };
 
-        function prevPage() {
-            if (currentPage > 0) {
-                showPage(currentPage - 1);
-            }
+      const handleNext = () => {
+        if (currentPage < 9) {
+          setCurrentPage(currentPage + 1);
         }
+      };
 
-        function handlePhoto(index) {
-            const fileInput = document.getElementById(`fileInput${index}`);
-            const file = fileInput.files[0];
-            
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    photos[index] = e.target.result;
-                    displayPhoto(index);
-                    document.getElementById(`saveBtn${index}`).disabled = false;
-                };
-                reader.readAsDataURL(file);
-            }
+      const handlePrev = () => {
+        if (currentPage > 0) {
+          setCurrentPage(currentPage - 1);
         }
+      };
 
-        function displayPhoto(index) {
-            const photoArea = document.getElementById(`photoArea${index}`);
-            photoArea.innerHTML = `
-                <img src="${photos[index]}" class="photo-img" alt="${locations[index]}">
-                <div class="masking-tape">${index + 1}. ${locations[index]}</div>
-            `;
-        }
+      const handleSaveNotebook = () => {
+        window.print();
+      };
 
-        function savePhoto(index) {
-            if (photos[index]) {
-                const link = document.createElement('a');
-                link.href = photos[index];
-                link.download = `${locations[index]}.jpg`;
-                link.click();
-            }
-        }
+      // Cover page
+      if (currentPage === 0) {
+        return (
+          <div 
+            className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-200 p-4"
+            onClick={handleNext}
+          >
+            <div className="w-full max-w-md aspect-[3/4] bg-gradient-to-br from-amber-800 to-amber-900 rounded-lg shadow-2xl flex items-center justify-center cursor-pointer relative overflow-hidden">
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDIwIDAgTCAwIDAgMCAyMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-30"></div>
+              <div className="text-center z-10">
+                <h1 className="text-5xl font-bold text-amber-50 mb-4" style={{ fontFamily: 'serif' }}>
+                  탐험수첩
+                </h1>
+                <p className="text-amber-200 text-sm">터치하여 열기</p>
+              </div>
+              <div className="absolute bottom-4 right-4 text-amber-300 text-xs flex items-center">
+                <ChevronRight size={24} />
+              </div>
+            </div>
+          </div>
+        );
+      }
 
-        function updateSummaryGrid() {
-            const grid = document.getElementById('summaryGrid');
-            grid.innerHTML = '';
-            
-            photos.forEach((photo, index) => {
-                const item = document.createElement('div');
-                item.className = 'summary-item';
-                
-                if (photo) {
-                    item.innerHTML = `
-                        <img src="${photo}" alt="${locations[index]}">
-                        <div class="mini-tape">${index + 1}</div>
-                    `;
-                } else {
-                    item.innerHTML = '<div class="summary-empty">사진 없음</div>';
-                }
-                
-                grid.appendChild(item);
-            });
-        }
+      // Photo pages (1-8)
+      if (currentPage >= 1 && currentPage <= 8) {
+        const photoIndex = currentPage - 1;
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-200 p-4">
+            <div className="w-full max-w-md aspect-[3/4] bg-amber-50 rounded-lg shadow-2xl p-6 relative" style={{
+              backgroundImage: `repeating-linear-gradient(transparent, transparent 24px, #e0d5c7 24px, #e0d5c7 25px)`
+            }}>
+              <div className="absolute top-4 right-4 text-amber-800 text-sm font-semibold">
+                {currentPage}/10
+              </div>
 
-        function saveNotebook() {
-            window.print();
-        }
-    </script>
+              <div className="mt-12 mb-6">
+                {photos[photoIndex] ? (
+                  <div className="relative">
+                    <img 
+                      src={photos[photoIndex]} 
+                      alt={locations[photoIndex]}
+                      className="w-full h-64 object-cover rounded shadow-lg"
+                    />
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-200 bg-opacity-70 px-8 py-1 rotate-1 shadow-md">
+                      <p className="text-sm text-gray-700" style={{ fontFamily: 'cursive' }}>
+                        {photoIndex + 1}. {locations[photoIndex]}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    onClick={() => fileInputRefs.current[photoIndex]?.click()}
+                    className="w-full h-64 border-4 border-dashed border-amber-300 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-amber-100 transition-colors"
+                  >
+                    <Camera size={48} className="text-amber-400 mb-2" />
+                    <p className="text-amber-600 text-sm">사진 촬영하기</p>
+                    <p className="text-amber-500 text-xs mt-1">{photoIndex + 1}. {locations[photoIndex]}</p>
+                  </div>
+                )}
+                <input
+                  ref={(el) => (fileInputRefs.current[photoIndex] = el)}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => handlePhotoCapture(photoIndex, e)}
+                  className="hidden"
+                />
+              </div>
+
+              <div className="absolute bottom-6 left-6 right-6 flex gap-3">
+                <button
+                  onClick={() => handleSavePhoto(photoIndex)}
+                  disabled={!photos[photoIndex]}
+                  className="flex-1 bg-amber-600 text-white py-3 rounded-lg font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-amber-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Download size={18} />
+                  사진저장하기
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="flex-1 bg-amber-800 text-white py-3 rounded-lg font-semibold hover:bg-amber-900 transition-colors flex items-center justify-center gap-2"
+                >
+                  다음
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+
+              {currentPage > 1 && (
+                <button
+                  onClick={handlePrev}
+                  className="absolute top-4 left-4 text-amber-600 hover:text-amber-800"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      // Summary page (9)
+      if (currentPage === 9) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-200 p-4">
+            <div className="w-full max-w-md aspect-[3/4] bg-amber-50 rounded-lg shadow-2xl p-6 relative overflow-y-auto" style={{
+              backgroundImage: `repeating-linear-gradient(transparent, transparent 24px, #e0d5c7 24px, #e0d5c7 25px)`
+            }}>
+              <div className="absolute top-4 right-4 text-amber-800 text-sm font-semibold">
+                10/10
+              </div>
+
+              <h2 className="text-2xl font-bold text-amber-900 mb-4 text-center" style={{ fontFamily: 'cursive' }}>
+                나의 탐험 기록
+              </h2>
+
+              <div className="grid grid-cols-2 gap-3 mb-20">
+                {photos.map((photo, index) => (
+                  <div key={index} className="relative">
+                    {photo ? (
+                      <>
+                        <img 
+                          src={photo} 
+                          alt={locations[index]}
+                          className="w-full h-32 object-cover rounded shadow"
+                        />
+                        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-yellow-200 bg-opacity-70 px-2 py-0.5 text-xs rotate-1">
+                          {index + 1}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-32 bg-gray-200 rounded flex items-center justify-center">
+                        <p className="text-gray-400 text-xs">사진 없음</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="absolute bottom-6 left-6 right-6 flex gap-3">
+                <button
+                  onClick={handlePrev}
+                  className="flex-1 bg-amber-600 text-white py-3 rounded-lg font-semibold hover:bg-amber-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <ChevronLeft size={18} />
+                  이전
+                </button>
+                <button
+                  onClick={handleSaveNotebook}
+                  className="flex-1 bg-amber-800 text-white py-3 rounded-lg font-semibold hover:bg-amber-900 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Download size={18} />
+                  수첩 저장
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return null;
+    }
+
+    // React 앱을 화면에 렌더링
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<ExplorationNotebook />);
+  </script>
 </body>
 </html>
